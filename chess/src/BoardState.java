@@ -91,4 +91,25 @@ public class BoardState {
 
         return kingInCheck;
     }
+
+    private void movePiece(Pieces piece, int row, int col) {
+        piece.setRow(row);
+        piece.setColumn(col);
+    }
+
+    public void castleRooks(boolean kingSide, boolean white) {
+        int row = white ? 7 : 0;
+        int col = kingSide ? 7 : 0;
+        int newCol = kingSide ? 5 : 3;
+
+        Pieces rook = getPieceAt(row, col);
+        if (rook instanceof ChessPieces.Rook) {
+            ChessPieces.Rook castlingRook = (ChessPieces.Rook) rook;
+            if (!castlingRook.hasMoved()) {
+                movePiece(castlingRook, row, newCol);
+                castlingRook.movedPiece();
+            }
+        }
+    }
+
 }

@@ -160,10 +160,20 @@ public class ChessPieces {
     // Rook Class
     public static class Rook extends Pieces {
         private BoardState boardState;
+        private boolean hasMoved;
 
         public Rook(int row, int column, String color, BoardState boardState) {
             super(row, column, color);
             this.boardState = boardState;
+            this.hasMoved = false;
+        }
+
+        public boolean hasMoved() {
+            return this.hasMoved;
+        }
+
+        public void movedPiece() {
+            this.hasMoved = true;
         }
 
         @Override
@@ -335,10 +345,21 @@ public class ChessPieces {
     // King Class
     public static class King extends Pieces {
         private BoardState boardState;
+        private boolean hasMoved;
 
         public King(int row, int column, String color, BoardState boardState) {
             super(row, column, color);
             this.boardState = boardState;
+            this.hasMoved = false;
+
+        }
+
+        public boolean hasMoved() {
+            return this.hasMoved;
+        }
+
+        public void movedPiece() {
+            this.hasMoved = true;
         }
 
         @Override
@@ -376,6 +397,11 @@ public class ChessPieces {
                 }
             }
 
+            if (!this.hasMoved) {
+                legalMoves.add(convertToPosition(row, column + 2));
+                legalMoves.add(convertToPosition(row, column - 2));
+            }
+
             return legalMoves;
         }
 
@@ -383,5 +409,6 @@ public class ChessPieces {
         protected char getPieceInitial() {
             return 'k'; // 'k' for king
         }
+
     }
 }
