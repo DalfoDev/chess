@@ -56,3 +56,18 @@ The project is organized into several key classes:
 ### Pawn Promotion
 
 - The promotion feature is implemented using a popup window that appears when a pawn reaches the last rank. This window shows buttons with icons representing the possible promotion pieces.
+
+### Castling
+
+Castling is a special move in chess that involves the king and one of the rooks. It's the only move in chess that allows a player to move two pieces at once. The move serves two purposes: it helps to protect the king by moving it to a safer position, and it helps to develop the rook by bringing it into the game.
+
+In this game:
+
+- **Conditions for Castling**:
+  - Neither the king nor the chosen rook must have moved previously in the game.
+  - There must be no pieces between the king and the rook.
+  - The king must not be in check, nor can the king pass through or land on a square that is attacked by an opponent's piece.
+- **How to Perform Castling**:
+  - To castle, move the king two squares towards the rook you wish to castle with. The game will automatically move the rook to the square next to the king.
+- **Implementation Details**:
+  - The castling logic is implemented in the move validation function. The game checks if all conditions for castling are met before allowing the move.
