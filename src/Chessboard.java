@@ -156,7 +156,8 @@ public class Chessboard extends JPanel {
 
                 if (selectedPiece instanceof ChessPieces.Pawn) {
                     if (row == 0 || row == 7) {
-                        PawnPromotionDialog promotionDialog = new PawnPromotionDialog(this, row, col);
+                        PawnPromotionDialog promotionDialog = new PawnPromotionDialog(this, row, col,
+                                selectedPiece.getColor().equals("white"));
                         promotionDialog.setVisible(true);
                     }
                 }

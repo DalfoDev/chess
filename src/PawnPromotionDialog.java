@@ -1,27 +1,44 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class PawnPromotionDialog extends JFrame {
 
     private String promotionChoice;
     private Chessboard chessboard; // Reference to the Chessboard
 
-    public PawnPromotionDialog(Chessboard chessboard, int row, int col) {
+    public PawnPromotionDialog(Chessboard chessboard, int row, int col, boolean white) {
         this.chessboard = chessboard;
         setTitle("Pawn Promotion");
         setLayout(new FlowLayout());
         setSize(400, 100);
+        setUndecorated(true);
+        setLocation(525, white ? 75 : 825);
 
         // Create buttons for each piece
-        JButton queenButton = new JButton("Queen");
-        JButton rookButton = new JButton("Rook");
-        JButton bishopButton = new JButton("Bishop");
-        JButton knightButton = new JButton("Knight");
 
-        Icon icon = new ImageIcon("chess/src/icons/wq.png");
-        JButton button7 = new JButton(icon);
+        // queen
+        Icon queenIcon = new ImageIcon(
+                white ? getClass().getResource("/icons/wq.png") : getClass().getResource("/icons/bq.png"));
+        JButton queenButton = new JButton(queenIcon);
+        queenButton.setFocusPainted(false);
+
+        // rook
+        Icon rookIcon = new ImageIcon(
+                white ? getClass().getResource("/icons/wr.png") : getClass().getResource("/icons/br.png"));
+        JButton rookButton = new JButton(rookIcon);
+        rookButton.setFocusPainted(false);
+
+        // bisop
+        Icon bishopIcon = new ImageIcon(
+                white ? getClass().getResource("/icons/wb.png") : getClass().getResource("/icons/bb.png"));
+        JButton bishopButton = new JButton(bishopIcon);
+        bishopButton.setFocusPainted(false);
+
+        // knight
+        Icon kinghtIcon = new ImageIcon(
+                white ? getClass().getResource("/icons/wn.png") : getClass().getResource("/icons/bn.png"));
+        JButton knightButton = new JButton(kinghtIcon);
+        knightButton.setFocusPainted(false);
 
         // Add action listeners to the buttons
         queenButton.addActionListener(e -> handlePromotionChoice("Queen", row, col));
@@ -34,16 +51,15 @@ public class PawnPromotionDialog extends JFrame {
         add(rookButton);
         add(bishopButton);
         add(knightButton);
-        add(button7);
-
-        // Position the frame at the top or bottom of the chessboard
-        setLocationRelativeTo(chessboard); // Center it on the main window
     }
 
     private void handlePromotionChoice(String choice, int row, int col) {
         this.promotionChoice = choice;
         chessboard.promotePawn(row, col, choice);
+        chessboard.revalidate(); // Ensures the component hierarchy is up to date
+        chessboard.repaint();
         dispose(); // Close the promotion frame
+
     }
 
     public String getPromotionChoice() {
