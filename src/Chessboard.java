@@ -149,82 +149,35 @@ public class Chessboard extends JPanel {
         if (selectedPiece != null) {
             int row = y / TILE_SIZE;
             int col = x / TILE_SIZE;
-            System.out.println(selectedPiece.getRow() + "," + selectedPiece.getColumn());
+            System.out.println(selectedPiece.getPosition());
+
             // Check if the new position is a legal move
             if (legalMoves.contains(convertToPosition(row, col))) {
                 Pieces targetPiece = findPieceAt(row, col);
 
-                if (selectedPiece instanceof ChessPieces.Pawn) {
-                    if (row == 0 || row == 7) {
-                        PawnPromotionDialog promotionDialog = new PawnPromotionDialog(this, row, col,
-                                selectedPiece.getColor().equals("white"));
-                        promotionDialog.setVisible(true);
-                    }
-                }
+                // Handle special moves: Pawn Promotion and Castling
+                handleSpecialMoves(selectedPiece, row, col, boardState);
 
-                // Castling Logic
-                if (selectedPiece instanceof ChessPieces.King) {
-                    ChessPieces.King king = (ChessPieces.King) selectedPiece;
-                    if (!king.hasMoved()) {
-                        boolean castlingOccurred = false;
-                        if (row == 7) {
-                            if (col == 6) {
-                                boardState.castleRooks(true, true);
-                                castlingOccurred = true;
-                            } else if (col == 2) {
-                                boardState.castleRooks(false, true);
-                                castlingOccurred = true;
-                            }
-                        } else if (row == 0) {
-                            if (col == 6) {
-                                boardState.castleRooks(true, false);
-                                castlingOccurred = true;
-                            } else if (col == 2) {
-                                boardState.castleRooks(false, false);
-                                castlingOccurred = true;
-                            }
-                        }
-
-                        if (castlingOccurred) {
-                            king.movedPiece();
-                        }
-                    }
-
-                    System.out.println("This king's moved state is: " + king.hasMoved());
-                }
-
-                if (selectedPiece instanceof ChessPieces.Rook) {
-                    ChessPieces.Rook rook = (ChessPieces.Rook) selectedPiece;
-                    System.out.println("This rook's moved state is: " + rook.hasMoved());
-                }
-
+                // Capture target piece if it exists and is of the opposite color
                 if (targetPiece != null && !targetPiece.getColor().equals(selectedPiece.getColor())) {
                     boardState.removePiece(targetPiece);
                 }
-                if (selectedPiece instanceof ChessPieces.King) {
-                    ChessPieces.King king = (ChessPieces.King) selectedPiece;
-                    king.movedPiece();
-                }
 
-                if (selectedPiece instanceof ChessPieces.Rook) {
-                    ChessPieces.Rook rook = (ChessPieces.Rook) selectedPiece;
-                    rook.movedPiece();
-                }
-
-                // Update piece position
-                selectedPiece.setRow(row);
-                selectedPiece.setColumn(col);
-                boardState.removePiece(selectedPiece); // Remove piece from old position
-                boardState.addPiece(selectedPiece); // Add piece to new position
+                // Update the selected piece's position on the board
+                updatePiecePosition(selectedPiece, row, col, boardState);
             }
 
             // Clear selection and repaint
-            selectedPiece = null;
-            legalMoves = null;
-            dragStartPoint = null;
-            dragCurrentPoint = null;
+            clearSelection();
             repaint();
         }
+
+        // Clear selection and repaint
+        selectedPiece = null;
+        legalMoves = null;
+        dragStartPoint = null;
+        dragCurrentPoint = null;
+        repaint();
     }
 
     private void handleMouseDrag(int x, int y) {
@@ -260,8 +213,11 @@ public class Chessboard extends JPanel {
                         filteredMoves.remove(entry.getValue());
                     }
                 }
-                if (blockingPiece != null && !king.hasMoved()) {
+                if (blockingPiece != null && !king.hasMoved() || boardState.isKingInCheck(selectedPiece.getColor())) {
                     filteredMoves.remove(piece.getColor().equals("white") ? "c8" : "c1");
+                    if (boardState.isKingInCheck(selectedPiece.getColor())) {
+                        filteredMoves.remove(piece.getColor().equals("white") ? "g8" : "g1");
+                    }
                 }
             }
         }
@@ -308,6 +264,68 @@ public class Chessboard extends JPanel {
         // Add the new piece to the board
         boardState.addPiece(newPiece);
 
+    }
+
+    private boolean attemptCastling(int row, int col, BoardState boardState, String color) {
+        // Determine if castling is possible based on the row and column
+        if (row == 7 || row == 0) {
+            boolean isKingSide = col == 6;
+            boolean isQueenSide = col == 2;
+
+            if (isKingSide || isQueenSide) {
+                boardState.castleRooks(isKingSide, row == 7);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void handleSpecialMoves(Pieces selectedPiece, int row, int col, BoardState boardState) {
+        if (selectedPiece instanceof ChessPieces.Pawn) {
+            handlePawnPromotion((ChessPieces.Pawn) selectedPiece, row, col);
+        } else if (selectedPiece instanceof ChessPieces.King) {
+            handleCastling((ChessPieces.King) selectedPiece, row, col, boardState);
+        } else if (selectedPiece instanceof ChessPieces.Rook) {
+            handleRookMovement((ChessPieces.Rook) selectedPiece);
+        }
+    }
+
+    private void handlePawnPromotion(ChessPieces.Pawn pawn, int row, int col) {
+        if (row == 0 || row == 7) {
+            boolean isWhite = pawn.getColor().equals("white");
+            PawnPromotionDialog promotionDialog = new PawnPromotionDialog(this, row, col, isWhite);
+            promotionDialog.setVisible(true);
+        }
+    }
+
+    private void handleCastling(ChessPieces.King king, int row, int col, BoardState boardState) {
+        String color = king.getColor().equals("white") ? "white" : "black";
+
+        if (!king.hasMoved() && !boardState.isKingInCheck(color)) {
+            boolean castlingOccurred = attemptCastling(row, col, boardState, color);
+            if (castlingOccurred) {
+                king.movedPiece();
+            }
+        }
+    }
+
+    private void handleRookMovement(ChessPieces.Rook rook) {
+        System.out.println("This rook's moved state is: " + rook.hasMoved());
+        rook.movedPiece();
+    }
+
+    private void updatePiecePosition(Pieces piece, int row, int col, BoardState boardState) {
+        piece.setRow(row);
+        piece.setColumn(col);
+        boardState.removePiece(piece); // Remove piece from old position
+        boardState.addPiece(piece); // Add piece to new position
+    }
+
+    private void clearSelection() {
+        selectedPiece = null;
+        legalMoves = null;
+        dragStartPoint = null;
+        dragCurrentPoint = null;
     }
 
     public static void main(String[] args) {
