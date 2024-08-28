@@ -20,6 +20,7 @@ public class Chessboard extends JPanel {
 
     private Point dragStartPoint; // Starting point of the drag
     private Point dragCurrentPoint; // Current point of the drag
+    private boolean whiteToMove = true;
 
     public Chessboard() {
         setPreferredSize(new Dimension(SIZE * TILE_SIZE, SIZE * TILE_SIZE));
@@ -149,22 +150,31 @@ public class Chessboard extends JPanel {
         if (selectedPiece != null) {
             int row = y / TILE_SIZE;
             int col = x / TILE_SIZE;
-            System.out.println(selectedPiece.getPosition());
 
-            // Check if the new position is a legal move
-            if (legalMoves.contains(convertToPosition(row, col))) {
-                Pieces targetPiece = findPieceAt(row, col);
+            // Check if it's the correct turn
+            if ((whiteToMove && selectedPiece.getColor().equals("white")) ||
+                    (!whiteToMove && selectedPiece.getColor().equals("black"))) {
 
-                // Handle special moves: Pawn Promotion and Castling
-                handleSpecialMoves(selectedPiece, row, col, boardState);
+                System.out.println(selectedPiece.getPosition());
 
-                // Capture target piece if it exists and is of the opposite color
-                if (targetPiece != null && !targetPiece.getColor().equals(selectedPiece.getColor())) {
-                    boardState.removePiece(targetPiece);
+                // Check if the new position is a legal move
+                if (legalMoves.contains(convertToPosition(row, col))) {
+                    Pieces targetPiece = findPieceAt(row, col);
+
+                    // Handle special moves: Pawn Promotion and Castling
+                    handleSpecialMoves(selectedPiece, row, col, boardState);
+
+                    // Capture target piece if it exists and is of the opposite color
+                    if (targetPiece != null && !targetPiece.getColor().equals(selectedPiece.getColor())) {
+                        boardState.removePiece(targetPiece);
+                    }
+
+                    // Update the selected piece's position on the board
+                    updatePiecePosition(selectedPiece, row, col, boardState);
+
+                    // Switch turns after a valid move
+                    whiteToMove = !whiteToMove;
                 }
-
-                // Update the selected piece's position on the board
-                updatePiecePosition(selectedPiece, row, col, boardState);
             }
 
             // Clear selection and repaint
